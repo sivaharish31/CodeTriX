@@ -174,6 +174,36 @@ CREATE TABLE IF NOT EXISTS debugging_submissions (
     CONSTRAINT fk_debug_submission_problem FOREIGN KEY (problem_id) REFERENCES debugging_problems(id)
 );
 
+-- CTF challenges table
+CREATE TABLE IF NOT EXISTS ctf_challenges (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL UNIQUE,
+    description TEXT NOT NULL,
+    category VARCHAR(20) NOT NULL,
+    difficulty VARCHAR(20) NOT NULL,
+    points INTEGER NOT NULL,
+    flag VARCHAR(500) NOT NULL,
+    attachment_filename VARCHAR(255),
+    attachment_path VARCHAR(500),
+    attachment_content_type VARCHAR(100),
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CTF submissions table
+CREATE TABLE IF NOT EXISTS ctf_submissions (
+    id BIGSERIAL PRIMARY KEY,
+    challenge_id BIGINT NOT NULL,
+    team_id BIGINT NOT NULL,
+    submitted_flag VARCHAR(500) NOT NULL,
+    correct BOOLEAN NOT NULL DEFAULT FALSE,
+    points_awarded INTEGER NOT NULL DEFAULT 0,
+    submission_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    CONSTRAINT fk_ctf_submission_challenge FOREIGN KEY (challenge_id) REFERENCES ctf_challenges(id) ON DELETE CASCADE,
+    CONSTRAINT fk_ctf_submission_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
+);
+
 -- Indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_role_id ON users(role_id);
@@ -195,3 +225,9 @@ CREATE INDEX IF NOT EXISTS idx_debug_testcases_problem_id ON debugging_test_case
 CREATE INDEX IF NOT EXISTS idx_debug_submissions_team_id ON debugging_submissions(team_id);
 CREATE INDEX IF NOT EXISTS idx_debug_submissions_problem_id ON debugging_submissions(problem_id);
 CREATE INDEX IF NOT EXISTS idx_debug_submissions_time ON debugging_submissions(submission_time);
+CREATE INDEX IF NOT EXISTS idx_ctf_challenges_category ON ctf_challenges(category);
+CREATE INDEX IF NOT EXISTS idx_ctf_challenges_active ON ctf_challenges(active);
+CREATE INDEX IF NOT EXISTS idx_ctf_submissions_team ON ctf_submissions(team_id);
+CREATE INDEX IF NOT EXISTS idx_ctf_submissions_challenge ON ctf_submissions(challenge_id);
+CREATE INDEX IF NOT EXISTS idx_ctf_submissions_team_challenge ON ctf_submissions(team_id, challenge_id);
+CREATE INDEX IF NOT EXISTS idx_ctf_submissions_time ON ctf_submissions(submission_time);

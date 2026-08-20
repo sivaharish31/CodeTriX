@@ -37,6 +37,13 @@ jwt:
 codetrix:
   max-teams: 27
 
+ctf:
+  upload:
+    dir: ${CTF_UPLOAD_DIR:uploads/ctf}
+  rate-limit:
+    attempts: 5
+    window-seconds: 60
+
 logging:
   level:
     com.codetrix: INFO
