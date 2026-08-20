@@ -123,6 +123,57 @@ CREATE TABLE IF NOT EXISTS submissions (
     CONSTRAINT fk_submission_problem FOREIGN KEY (problem_id) REFERENCES coding_problems(id)
 );
 
+-- Debugging problems table
+CREATE TABLE IF NOT EXISTS debugging_problems (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    description TEXT NOT NULL,
+    buggy_code TEXT NOT NULL,
+    language VARCHAR(10) NOT NULL,
+    points INTEGER NOT NULL,
+    time_limit_ms INTEGER NOT NULL DEFAULT 2000,
+    memory_limit_mb INTEGER NOT NULL DEFAULT 256,
+    hint TEXT,
+    display_order INTEGER DEFAULT 0,
+    enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Debugging test cases table
+CREATE TABLE IF NOT EXISTS debugging_test_cases (
+    id BIGSERIAL PRIMARY KEY,
+    problem_id BIGINT NOT NULL,
+    input TEXT NOT NULL,
+    expected_output TEXT NOT NULL,
+    is_sample BOOLEAN NOT NULL DEFAULT FALSE,
+    display_order INTEGER DEFAULT 0,
+    explanation TEXT,
+    CONSTRAINT fk_debug_testcase_problem FOREIGN KEY (problem_id) REFERENCES debugging_problems(id) ON DELETE CASCADE
+);
+
+-- Debugging submissions table
+CREATE TABLE IF NOT EXISTS debugging_submissions (
+    id BIGSERIAL PRIMARY KEY,
+    team_id BIGINT NOT NULL,
+    team_code VARCHAR(20) NOT NULL,
+    problem_id BIGINT NOT NULL,
+    language VARCHAR(10) NOT NULL,
+    source_code TEXT NOT NULL,
+    submission_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'QUEUED',
+    tests_passed INTEGER DEFAULT 0,
+    total_tests INTEGER DEFAULT 0,
+    points_earned INTEGER DEFAULT 0,
+    execution_time_ms INTEGER,
+    memory_used_kb INTEGER,
+    compile_output TEXT,
+    error_message TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_debug_submission_team FOREIGN KEY (team_id) REFERENCES teams(id),
+    CONSTRAINT fk_debug_submission_problem FOREIGN KEY (problem_id) REFERENCES debugging_problems(id)
+);
+
 -- Indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_role_id ON users(role_id);
@@ -139,3 +190,8 @@ CREATE INDEX IF NOT EXISTS idx_submissions_team_id ON submissions(team_id);
 CREATE INDEX IF NOT EXISTS idx_submissions_problem_id ON submissions(problem_id);
 CREATE INDEX IF NOT EXISTS idx_submissions_time ON submissions(submission_time);
 CREATE INDEX IF NOT EXISTS idx_submissions_status ON submissions(status);
+CREATE INDEX IF NOT EXISTS idx_debug_problems_enabled ON debugging_problems(enabled);
+CREATE INDEX IF NOT EXISTS idx_debug_testcases_problem_id ON debugging_test_cases(problem_id);
+CREATE INDEX IF NOT EXISTS idx_debug_submissions_team_id ON debugging_submissions(team_id);
+CREATE INDEX IF NOT EXISTS idx_debug_submissions_problem_id ON debugging_submissions(problem_id);
+CREATE INDEX IF NOT EXISTS idx_debug_submissions_time ON debugging_submissions(submission_time);

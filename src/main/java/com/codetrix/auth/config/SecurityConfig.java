@@ -51,6 +51,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/team/**").hasRole("TEAM")
                 .requestMatchers("/api/coding/run", "/api/coding/submit", "/api/coding/submissions/**").hasRole("TEAM")
                 .requestMatchers("/api/coding/problems/**").authenticated()
+                .requestMatchers("/api/debugging/run", "/api/debugging/submit", "/api/debugging/submissions/**").hasRole("TEAM")
+                .requestMatchers("/api/debugging/problems/**").authenticated()
                 .requestMatchers("/api/event/**").authenticated()
                 .requestMatchers("/api/auth/logout", "/api/auth/me").authenticated()
                 .anyRequest().authenticated()
