@@ -49,6 +49,8 @@ public class SecurityConfig {
                 ).permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/team/**").hasRole("TEAM")
+                .requestMatchers("/api/coding/run", "/api/coding/submit", "/api/coding/submissions/**").hasRole("TEAM")
+                .requestMatchers("/api/coding/problems/**").authenticated()
                 .requestMatchers("/api/event/**").authenticated()
                 .requestMatchers("/api/auth/logout", "/api/auth/me").authenticated()
                 .anyRequest().authenticated()
