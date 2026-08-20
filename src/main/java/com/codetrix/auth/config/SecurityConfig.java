@@ -60,6 +60,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/leaderboard").authenticated()
                 .requestMatchers("/api/leaderboard/my-score").hasRole("TEAM")
                 .requestMatchers("/api/leaderboard/team/**").authenticated()
+                .requestMatchers("/api/proctoring/violations/**").hasRole("TEAM")
                 .requestMatchers("/api/event/**").authenticated()
                 .requestMatchers("/api/auth/logout", "/api/auth/me").authenticated()
                 .anyRequest().authenticated()

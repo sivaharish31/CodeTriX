@@ -238,6 +238,33 @@ CREATE TABLE IF NOT EXISTS score_records (
     CONSTRAINT uk_score_record_unique UNIQUE (team_id, score_type, problem_id)
 );
 
+-- Proctoring violations table
+CREATE TABLE IF NOT EXISTS proctoring_violations (
+    id BIGSERIAL PRIMARY KEY,
+    team_id BIGINT NOT NULL,
+    round_id BIGINT NOT NULL,
+    violation_type VARCHAR(30) NOT NULL,
+    violation_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    client_timestamp BIGINT,
+    details TEXT,
+    user_agent TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_violation_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
+);
+
+-- Team review status table
+CREATE TABLE IF NOT EXISTS team_review_status (
+    id BIGSERIAL PRIMARY KEY,
+    team_id BIGINT NOT NULL UNIQUE,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    admin_notes TEXT,
+    reviewed_by VARCHAR(100),
+    reviewed_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_review_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
+);
+
 -- Indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_role_id ON users(role_id);
@@ -269,3 +296,9 @@ CREATE INDEX IF NOT EXISTS idx_team_scores_total ON team_scores(total_score DESC
 CREATE INDEX IF NOT EXISTS idx_team_scores_team ON team_scores(team_id);
 CREATE INDEX IF NOT EXISTS idx_score_records_team ON score_records(team_id);
 CREATE INDEX IF NOT EXISTS idx_score_records_type ON score_records(score_type);
+CREATE INDEX IF NOT EXISTS idx_violations_team ON proctoring_violations(team_id);
+CREATE INDEX IF NOT EXISTS idx_violations_round ON proctoring_violations(round_id);
+CREATE INDEX IF NOT EXISTS idx_violations_type ON proctoring_violations(violation_type);
+CREATE INDEX IF NOT EXISTS idx_violations_time ON proctoring_violations(violation_time);
+CREATE INDEX IF NOT EXISTS idx_review_team ON team_review_status(team_id);
+CREATE INDEX IF NOT EXISTS idx_review_status ON team_review_status(status);
