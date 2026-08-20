@@ -44,6 +44,32 @@ ctf:
     attempts: 5
     window-seconds: 60
 
+execution:
+  max-concurrent-executions: 4
+  queue-capacity: 100
+  default-time-limit-ms: 2000
+  default-memory-limit-mb: 256
+  max-time-limit-ms: 10000
+  max-memory-limit-mb: 512
+  compilation-timeout-ms: 30000
+  temp-directory: ${EXECUTION_TEMP_DIR:/tmp/codetrix}
+  cleanup-enabled: true
+  docker:
+    network: none
+    privileged: false
+    read-only-root-fs: true
+    cpu-period: 100000
+    cpu-quota: 50000
+    pids-limit: 64
+    user: runner
+    drop-all-capabilities: true
+  security:
+    enable-seccomp: true
+    enable-app-armor: true
+    no-new-privileges: true
+    max-output-size-kb: 64
+    max-source-code-size-kb: 128
+
 logging:
   level:
     com.codetrix: INFO

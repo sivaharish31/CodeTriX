@@ -4,12 +4,14 @@ import com.codetrix.coding.entity.Language;
 import com.codetrix.coding.entity.Submission;
 import com.codetrix.coding.entity.TestCase;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Slf4j
 @Service
+@ConditionalOnProperty(name = "execution.mock-enabled", havingValue = "true")
 public class MockCodeExecutionService implements CodeExecutionService {
 
     @Override
