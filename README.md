@@ -1,28 +1,18 @@
 # CodeTriX - College Coding Event Platform
 
-## Authentication & Authorization Module
+## Modules
 
-This module provides secure authentication and authorization for the CodeTriX platform.
+### 1. Authentication & Authorization Module
 
-### Features
+Provides secure JWT-based authentication and role-based access control.
 
-- JWT-based authentication
+#### Features
+- JWT-based authentication with token blacklisting
 - Role-based access control (ADMIN, TEAM)
-- BCrypt password hashing
-- Token blacklisting for logout
-- Validation on all requests
+- BCrypt password hashing (strength 12)
 - Comprehensive error handling
 
-### Tech Stack
-
-- Java 21
-- Spring Boot 3.3.0
-- Spring Security
-- Spring Data JPA
-- PostgreSQL
-- JWT (jjwt 0.12.5)
-
-### API Endpoints
+#### Auth API Endpoints
 
 | Method | Endpoint | Description | Access |
 |--------|----------|-------------|--------|
@@ -31,21 +21,59 @@ This module provides secure authentication and authorization for the CodeTriX pl
 | POST | `/api/auth/logout` | Logout (invalidate token) | Authenticated |
 | GET | `/api/auth/me` | Get current user info | Authenticated |
 
-### Getting Started
+---
 
-#### Prerequisites
+### 2. Team Registration & Management Module
+
+Manages team registration and team member enrollment for the coding event.
+
+#### Features
+- Maximum 27 teams limit enforcement
+- Auto-generated unique team codes (CTXxxx format)
+- Secure 6-digit PIN generation
+- Team member management with roll number uniqueness
+- Status-based team lifecycle (REGISTERED, ACTIVE, DISQUALIFIED, COMPLETED)
+- Modification restrictions after event starts
+
+#### Team Management API Endpoints (Admin Only)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/admin/teams` | Create a new team |
+| GET | `/api/admin/teams` | List all teams with members |
+| GET | `/api/admin/teams/{teamId}` | Get team details |
+| PUT | `/api/admin/teams/{teamId}` | Update team name/status |
+| POST | `/api/admin/teams/{teamId}/credentials` | Regenerate login PIN |
+| POST | `/api/admin/teams/{teamId}/members` | Add team member |
+| PUT | `/api/admin/teams/{teamId}/members/{memberId}` | Update member |
+| DELETE | `/api/admin/teams/{teamId}/members/{memberId}` | Remove member |
+
+---
+
+## Tech Stack
+
+- Java 21
+- Spring Boot 3.3.0
+- Spring Security
+- Spring Data JPA
+- PostgreSQL
+- JWT (jjwt 0.12.5)
+
+## Getting Started
+
+### Prerequisites
 
 - Java 21
 - PostgreSQL 15+
 - Maven 3.9+
 
-#### Database Setup
+### Database Setup
 
 ```sql
 CREATE DATABASE codetrix;
 ```
 
-#### Configuration
+### Configuration
 
 Set environment variables or update `application.yml`:
 
@@ -55,27 +83,23 @@ export DB_PASSWORD=your_password
 export JWT_SECRET=your-base64-encoded-secret-key
 ```
 
-#### Run the Application
+### Run the Application
 
 ```bash
 mvn spring-boot:run
 ```
 
-### Default Credentials
+## Default Credentials
 
 **Admin:**
 - Username: `admin`
 - Password: `admin123`
 
-**Sample Team:**
-- Team ID: `TEAM001`
-- PIN: `1234`
-
 > **Warning:** Change default credentials in production!
 
-### API Usage Examples
+## API Usage Examples
 
-#### Admin Login
+### Admin Login
 
 ```bash
 curl -X POST http://localhost:8080/api/auth/admin/login \
@@ -83,42 +107,71 @@ curl -X POST http://localhost:8080/api/auth/admin/login \
   -d '{"username": "admin", "password": "admin123"}'
 ```
 
-#### Team Login
+### Create Team
+
+```bash
+curl -X POST http://localhost:8080/api/admin/teams \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <admin-token>" \
+  -d '{"teamName": "Code Warriors"}'
+```
+
+Response:
+```json
+{
+  "teamId": 1,
+  "teamCode": "CTX042",
+  "teamName": "Code Warriors",
+  "loginPin": "847291",
+  "message": "Please share these credentials securely with the team. The PIN cannot be retrieved again."
+}
+```
+
+### Add Team Member
+
+```bash
+curl -X POST http://localhost:8080/api/admin/teams/1/members \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer <admin-token>" \
+  -d '{
+    "name": "John Doe",
+    "rollNumber": "CS2021001",
+    "college": "ABC Engineering College",
+    "email": "john@example.com"
+  }'
+```
+
+### Team Login
 
 ```bash
 curl -X POST http://localhost:8080/api/auth/team/login \
   -H "Content-Type: application/json" \
-  -d '{"teamId": "TEAM001", "loginPin": "1234"}'
+  -d '{"teamId": "CTX042", "loginPin": "847291"}'
 ```
 
-#### Get Current User
+### List All Teams
 
 ```bash
-curl -X GET http://localhost:8080/api/auth/me \
-  -H "Authorization: Bearer <your-jwt-token>"
+curl -X GET http://localhost:8080/api/admin/teams \
+  -H "Authorization: Bearer <admin-token>"
 ```
 
-#### Logout
-
-```bash
-curl -X POST http://localhost:8080/api/auth/logout \
-  -H "Authorization: Bearer <your-jwt-token>"
+Response:
+```json
+{
+  "teams": [...],
+  "totalTeams": 5,
+  "maxTeams": 27,
+  "availableSlots": 22
+}
 ```
 
-### Security
-
-- Passwords are hashed using BCrypt (strength 12)
-- JWT tokens expire after 24 hours
-- Blacklisted tokens are cleaned up hourly
-- CSRF disabled (stateless JWT auth)
-- Role-based endpoint protection
-
-### Project Structure
+## Project Structure
 
 ```
 src/main/java/com/codetrix/
 ├── CodeTrixApplication.java
-├── auth/
+├── auth/                           # Authentication Module
 │   ├── config/
 │   │   ├── DataInitializer.java
 │   │   ├── JwtConfig.java
@@ -126,33 +179,51 @@ src/main/java/com/codetrix/
 │   ├── controller/
 │   │   └── AuthController.java
 │   ├── dto/
-│   │   ├── AdminLoginRequest.java
-│   │   ├── AuthResponse.java
-│   │   ├── ErrorResponse.java
-│   │   ├── MessageResponse.java
-│   │   ├── TeamLoginRequest.java
-│   │   └── UserInfoResponse.java
 │   ├── entity/
 │   │   ├── Role.java
-│   │   ├── Team.java
 │   │   └── User.java
 │   ├── exception/
-│   │   ├── AuthException.java
-│   │   └── GlobalExceptionHandler.java
 │   ├── repository/
-│   │   ├── RoleRepository.java
-│   │   ├── TeamRepository.java
-│   │   └── UserRepository.java
 │   ├── security/
-│   │   ├── CustomAccessDeniedHandler.java
-│   │   ├── JwtAuthenticationEntryPoint.java
-│   │   └── JwtAuthenticationFilter.java
 │   └── service/
-│       ├── AuthService.java
-│       ├── CustomUserDetailsService.java
-│       ├── JwtService.java
-│       └── TokenBlacklistService.java
+├── team/                           # Team Management Module
+│   ├── controller/
+│   │   └── TeamManagementController.java
+│   ├── dto/
+│   │   ├── CreateTeamRequest.java
+│   │   ├── UpdateTeamRequest.java
+│   │   ├── AddMemberRequest.java
+│   │   ├── UpdateMemberRequest.java
+│   │   ├── TeamResponse.java
+│   │   ├── MemberResponse.java
+│   │   ├── TeamCredentialsResponse.java
+│   │   └── TeamListResponse.java
+│   ├── entity/
+│   │   ├── Team.java
+│   │   ├── TeamMember.java
+│   │   └── TeamStatus.java
+│   ├── exception/
+│   ├── repository/
+│   └── service/
+│       └── TeamService.java
 └── common/
     └── enums/
         └── RoleType.java
 ```
+
+## Database Schema
+
+### Tables
+- `roles` - System roles (ADMIN, TEAM)
+- `users` - Admin users
+- `teams` - Registered teams
+- `team_members` - Team participants
+
+## Security Notes
+
+- Passwords/PINs are hashed using BCrypt (strength 12)
+- JWT tokens expire after 24 hours
+- Blacklisted tokens are cleaned up hourly
+- CSRF disabled (stateless JWT auth)
+- Role-based endpoint protection
+- Team modifications blocked after event starts

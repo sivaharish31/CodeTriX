@@ -1,10 +1,8 @@
 package com.codetrix.auth.config;
 
 import com.codetrix.auth.entity.Role;
-import com.codetrix.auth.entity.Team;
 import com.codetrix.auth.entity.User;
 import com.codetrix.auth.repository.RoleRepository;
-import com.codetrix.auth.repository.TeamRepository;
 import com.codetrix.auth.repository.UserRepository;
 import com.codetrix.common.enums.RoleType;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +20,6 @@ public class DataInitializer {
 
     private final RoleRepository roleRepository;
     private final UserRepository userRepository;
-    private final TeamRepository teamRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Bean
@@ -31,7 +28,6 @@ public class DataInitializer {
         return args -> {
             initializeRoles();
             initializeDefaultAdmin();
-            initializeSampleTeam();
         };
     }
 
@@ -71,25 +67,6 @@ public class DataInitializer {
             userRepository.save(admin);
             log.info("Created default admin user (username: admin, password: admin123)");
             log.warn("IMPORTANT: Change the default admin password in production!");
-        }
-    }
-
-    private void initializeSampleTeam() {
-        if (!teamRepository.existsByTeamId("TEAM001")) {
-            Role teamRole = roleRepository.findByName(RoleType.TEAM)
-                    .orElseThrow(() -> new RuntimeException("TEAM role not found"));
-
-            Team team = Team.builder()
-                    .teamId("TEAM001")
-                    .teamName("Sample Team")
-                    .loginPin(passwordEncoder.encode("1234"))
-                    .role(teamRole)
-                    .enabled(true)
-                    .institution("Demo University")
-                    .memberCount(3)
-                    .build();
-            teamRepository.save(team);
-            log.info("Created sample team (teamId: TEAM001, pin: 1234)");
         }
     }
 }

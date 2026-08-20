@@ -1,12 +1,13 @@
 package com.codetrix.auth.service;
 
 import com.codetrix.auth.dto.*;
-import com.codetrix.auth.entity.Team;
 import com.codetrix.auth.entity.User;
 import com.codetrix.auth.exception.AuthException;
-import com.codetrix.auth.repository.TeamRepository;
 import com.codetrix.auth.repository.UserRepository;
 import com.codetrix.common.enums.RoleType;
+import com.codetrix.team.entity.Team;
+import com.codetrix.team.entity.TeamStatus;
+import com.codetrix.team.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -77,27 +78,25 @@ public class AuthService {
     public AuthResponse authenticateTeam(TeamLoginRequest request) {
         log.debug("Authenticating team: {}", request.getTeamId());
 
-        Team team = teamRepository.findByTeamId(request.getTeamId())
+        Team team = teamRepository.findByTeamCode(request.getTeamId())
                 .orElseThrow(AuthException::invalidCredentials);
 
-        if (!team.getEnabled()) {
+        if (team.getStatus() == TeamStatus.DISQUALIFIED) {
             throw AuthException.accountDisabled();
         }
 
-        if (!passwordEncoder.matches(request.getLoginPin(), team.getLoginPin())) {
+        if (!passwordEncoder.matches(request.getLoginPin(), team.getLoginPinHash())) {
             log.warn("Invalid PIN attempt for team: {}", request.getTeamId());
             throw AuthException.invalidCredentials();
         }
 
         Map<String, Object> additionalClaims = new HashMap<>();
         additionalClaims.put("teamName", team.getTeamName());
-        if (team.getInstitution() != null) {
-            additionalClaims.put("institution", team.getInstitution());
-        }
+        additionalClaims.put("teamId", team.getId());
 
         String token = jwtService.generateToken(
-                team.getTeamId(),
-                team.getRole().getName().name(),
+                team.getTeamCode(),
+                "TEAM",
                 "TEAM",
                 additionalClaims
         );
@@ -107,8 +106,8 @@ public class AuthService {
         return AuthResponse.of(
                 token,
                 jwtService.getExpirationTime() / 1000,
-                team.getRole().getName().name(),
-                team.getTeamId(),
+                "TEAM",
+                team.getTeamCode(),
                 team.getTeamName()
         );
     }
@@ -147,14 +146,13 @@ public class AuthService {
                         .userType(userType)
                         .build();
             } else {
-                Team team = teamRepository.findByTeamId(subject)
+                Team team = teamRepository.findByTeamCode(subject)
                         .orElseThrow(AuthException::teamNotFound);
 
                 return UserInfoResponse.builder()
-                        .identifier(team.getTeamId())
+                        .identifier(team.getTeamCode())
                         .displayName(team.getTeamName())
                         .role(role)
-                        .institution(team.getInstitution())
                         .userType(userType)
                         .build();
             }

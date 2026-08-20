@@ -1,9 +1,10 @@
 package com.codetrix.auth.service;
 
-import com.codetrix.auth.entity.Team;
 import com.codetrix.auth.entity.User;
-import com.codetrix.auth.repository.TeamRepository;
 import com.codetrix.auth.repository.UserRepository;
+import com.codetrix.team.entity.Team;
+import com.codetrix.team.entity.TeamStatus;
+import com.codetrix.team.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -38,18 +39,20 @@ public class CustomUserDetailsService implements UserDetailsService {
         );
     }
 
-    public UserDetails loadTeamByTeamId(String teamId) throws UsernameNotFoundException {
-        Team team = teamRepository.findByTeamId(teamId)
-                .orElseThrow(() -> new UsernameNotFoundException("Team not found: " + teamId));
+    public UserDetails loadTeamByTeamCode(String teamCode) throws UsernameNotFoundException {
+        Team team = teamRepository.findByTeamCode(teamCode)
+                .orElseThrow(() -> new UsernameNotFoundException("Team not found: " + teamCode));
+
+        boolean enabled = team.getStatus() != TeamStatus.DISQUALIFIED;
 
         return new org.springframework.security.core.userdetails.User(
-                team.getTeamId(),
-                team.getLoginPin(),
-                team.getEnabled(),
+                team.getTeamCode(),
+                team.getLoginPinHash(),
+                enabled,
                 true,
                 true,
                 true,
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + team.getRole().getName().name()))
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_TEAM"))
         );
     }
 }
