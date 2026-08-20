@@ -1,0 +1,46 @@
+package com.codetrix.leaderboard.dto;
+
+import com.codetrix.leaderboard.entity.TeamScore;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class TeamScoreResponse {
+
+    private Long teamId;
+    private String teamName;
+    private Integer rank;
+    private Integer totalTeams;
+    private Integer codingScore;
+    private Integer debuggingScore;
+    private Integer ctfScore;
+    private Integer totalScore;
+    private Integer codingProblemsSolved;
+    private Integer debuggingProblemsSolved;
+    private Integer ctfChallengesSolved;
+    private LocalDateTime lastSubmissionTime;
+
+    public static TeamScoreResponse from(TeamScore teamScore, int rank, int totalTeams) {
+        return TeamScoreResponse.builder()
+            .teamId(teamScore.getTeam().getId())
+            .teamName(teamScore.getTeam().getTeamName())
+            .rank(rank)
+            .totalTeams(totalTeams)
+            .codingScore(teamScore.getCodingScore())
+            .debuggingScore(teamScore.getDebuggingScore())
+            .ctfScore(teamScore.getCtfScore())
+            .totalScore(teamScore.getTotalScore())
+            .codingProblemsSolved(teamScore.getCodingProblemsSolved())
+            .debuggingProblemsSolved(teamScore.getDebuggingProblemsSolved())
+            .ctfChallengesSolved(teamScore.getCtfChallengesSolved())
+            .lastSubmissionTime(teamScore.getLastSubmissionTime())
+            .build();
+    }
+}

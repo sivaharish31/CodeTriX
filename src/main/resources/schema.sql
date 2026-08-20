@@ -204,6 +204,40 @@ CREATE TABLE IF NOT EXISTS ctf_submissions (
     CONSTRAINT fk_ctf_submission_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
 );
 
+-- Team scores table (for leaderboard)
+CREATE TABLE IF NOT EXISTS team_scores (
+    id BIGSERIAL PRIMARY KEY,
+    team_id BIGINT NOT NULL UNIQUE,
+    coding_score INTEGER NOT NULL DEFAULT 0,
+    debugging_score INTEGER NOT NULL DEFAULT 0,
+    ctf_score INTEGER NOT NULL DEFAULT 0,
+    total_score INTEGER NOT NULL DEFAULT 0,
+    coding_problems_solved INTEGER NOT NULL DEFAULT 0,
+    debugging_problems_solved INTEGER NOT NULL DEFAULT 0,
+    ctf_challenges_solved INTEGER NOT NULL DEFAULT 0,
+    last_submission_time TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_team_scores_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE
+);
+
+-- Score records table (audit trail)
+CREATE TABLE IF NOT EXISTS score_records (
+    id BIGSERIAL PRIMARY KEY,
+    team_id BIGINT NOT NULL,
+    score_type VARCHAR(20) NOT NULL,
+    problem_id BIGINT NOT NULL,
+    submission_id BIGINT,
+    points_earned INTEGER NOT NULL,
+    max_points INTEGER NOT NULL,
+    tests_passed INTEGER,
+    total_tests INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_score_records_team FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE,
+    CONSTRAINT uk_score_record_unique UNIQUE (team_id, score_type, problem_id)
+);
+
 -- Indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_role_id ON users(role_id);
@@ -231,3 +265,7 @@ CREATE INDEX IF NOT EXISTS idx_ctf_submissions_team ON ctf_submissions(team_id);
 CREATE INDEX IF NOT EXISTS idx_ctf_submissions_challenge ON ctf_submissions(challenge_id);
 CREATE INDEX IF NOT EXISTS idx_ctf_submissions_team_challenge ON ctf_submissions(team_id, challenge_id);
 CREATE INDEX IF NOT EXISTS idx_ctf_submissions_time ON ctf_submissions(submission_time);
+CREATE INDEX IF NOT EXISTS idx_team_scores_total ON team_scores(total_score DESC);
+CREATE INDEX IF NOT EXISTS idx_team_scores_team ON team_scores(team_id);
+CREATE INDEX IF NOT EXISTS idx_score_records_team ON score_records(team_id);
+CREATE INDEX IF NOT EXISTS idx_score_records_type ON score_records(score_type);
