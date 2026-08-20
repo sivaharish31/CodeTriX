@@ -41,6 +41,7 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/api/auth/admin/login",
                     "/api/auth/team/login",
+                    "/ws/**",
                     "/h2-console/**",
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
@@ -48,6 +49,7 @@ public class SecurityConfig {
                 ).permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/team/**").hasRole("TEAM")
+                .requestMatchers("/api/event/**").authenticated()
                 .requestMatchers("/api/auth/logout", "/api/auth/me").authenticated()
                 .anyRequest().authenticated()
             )
